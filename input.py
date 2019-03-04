@@ -4,63 +4,41 @@ import numpy as np
 import math
 
 class Input:
-    dataset_path = '/home/eric/Downloads/CheXpert-v1.0-small'
+    def load_data(self, index, path):
+        data = open(path).readlines()
+        data = list(map(lambda x: x.split(','), data))[1:]
+        image_names = list(map(lambda x: [x[0]], data))
 
-    train_list = open(f'{dataset_path}/train.csv').readlines()
-    train_list = list(map(lambda x: x.split(','), train_list))
-
-    dev_list = open(f'{dataset_path}/valid.csv').readlines()
-    dev_list = list(map(lambda x: x.split(','), dev_list))
-
-    def __init__(self):
-        self.__dataset_path = '/home/eric/Downloads'
-        self.__num_features = 14
-
-        self.__train_list = open(f'{self.__dataset_path}/CheXpert-v1.0-small/train.csv').readlines()
-        self.__train_list = list(map(lambda x: x.split(','), self.__train_list))[1:]
-        self.__train_labels = tf.convert_to_tensor(self.get_labels(self.__train_list))
-        self.__train_list = tf.convert_to_tensor(self.__train_list, dtype=tf.string)
-
-        self.__dev_list = open(f'{self.__dataset_path}/CheXpert-v1.0-small/valid.csv').readlines()
-        self.__dev_list = list(map(lambda x: x.split(','), self.__dev_list))[1:]
-        self.__dev_labels = tf.convert_to_tensor(self.get_labels(self.__dev_list))
+        labels = self.get_labels(data, index)
+        labels = np.reshape(np.asarray(labels), (-1, 1))
 
         self.step = tf.Variable(initial_value=0, trainable=False, dtype=tf.int32)
+        return tf.data.Dataset.from_tensor_slices((image_names, labels))
 
-    def get_labels(self, index):
-        return list(map(lambda p: list(map(lambda f: math.floor(float(f)) if len(f.strip()) > 0 else -1, p[5:])), index))
+    def get_labels(self, labels, index):
+        return list(map(lambda p: math.floor(float(p[5+index])) if len(p[5+index].strip()) > 0 else -1, labels))
 
-    def train_input_fn(self, batch_size, sess):
-        new_features = tf.Variable(initial_value=tf.zeros((batch_size, 400, 400), dtype=tf.uint8), trainable=False, dtype=tf.uint8)
+    def process_image(self, features, label):
+        image = tf.image.decode_jpeg(tf.read_file('/home/eric/Downloads/' + features[0]), channels=1)
+        image = tf.image.resize_image_with_crop_or_pad(image, 400, 400)
+        image = tf.math.divide(tf.cast(image, tf.float32), 255.0)
+        return image, label
 
-        def read_image(index, start, features):
-            image = tf.image.decode_jpeg(tf.read_file(self.__dataset_path + '/' + self.__train_list[index][0]), channels=3)
-            image = tf.image.rgb_to_grayscale(image)
-            tf.assign(new_features, features)
-            image = tf.pad(image, [[400-tf.shape(image)[0], 0], [400-tf.shape(image)[1], 0], [0, 0]])
-            image = tf.reshape(image, (400, 400))
+    def get_dataset(self, path, batch_size, col_index):
+        dataset = self.load_data(col_index, path)
+        dataset = dataset.map(self.process_image)
+        dataset = dataset.shuffle(buffer_size=batch_size*2)
+        dataset = dataset.repeat()
+        dataset = dataset.batch(batch_size)
+        dataset = dataset.prefetch(batch_size*2)
+        return dataset
 
-            return index + 1, start, tf.assign(new_features[index-start], image)
-
+    def train_input_fn(self, batch_size, col_index):
         def input():
-            start = tf.mod(tf.math.multiply(self.step, batch_size), tf.shape(self.__train_list)[0])
-            end = tf.math.add(start, batch_size)
-
-            index = tf.Variable(initial_value=start, trainable=False, dtype=tf.int32)
-            features = tf.Variable(initial_value=tf.zeros((batch_size, 400, 400), dtype=tf.uint8), trainable=False, dtype=tf.uint8)
-
-            index, start, features = tf.while_loop(lambda index, start, features: tf.math.less(index, end), read_image, [index, start, features])
-            
-            tf.assign(self.step, self.step+1)
-            return features, self.__train_labels[start:end]
-        
+            return self.get_dataset('/home/eric/Downloads/CheXpert-v1.0-small/train.csv', batch_size, col_index)
         return input
-
-if __name__ == '__main__':
-    with tf.Session() as sess:
-        input = Input()
-        features, labels = input.train_input_fn(5, sess)()
-        sess.run(tf.global_variables_initializer())
-        f, l = sess.run([features, labels])
-        
-        print(l)
+    
+    def dev_input_fn(self, batch_size, col_index):
+        def input():
+            return self.get_dataset('/home/eric/Downloads/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+        return input
