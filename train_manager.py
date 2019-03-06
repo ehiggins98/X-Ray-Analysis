@@ -8,32 +8,26 @@ def train():
     batch_size = 50
     col_index = 1
 
-    model = Model().get_model()
-    estimator = tf.contrib.tpu.keras_to_tpu_model(
-        model=model,
-        strategy=tf.contrib.tpu.TPUDistributionStrategy(
-            tf.contrib.cluster_resolver.TPUClusterResolver(tpu=['ericdhiggins'], zone='us-central1-b')
-        )
+    run_config = tf.contrib.tpu.RunConfig(
+        model_dir='models/nasnet',
+        session_config=tf.ConfigProto(
+            allow_soft_placement=True, log_device_placement=True
+        ),
+        tpu_config=tf.contrib.tpu.TPUConfig()
     )
 
-    estimator.compile(optimizer=tf.keras.optimizers.SGD(momentum=0.5, nesterov=True), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
-
-    def train_gen(batch_size):
-        dataset = Input().train_input_fn(batch_size, col_index)()
-        iter = dataset.make_initializable_iterator()
-
-        while True:
-            yield iter.get_next()
-
-    x_val, y_val = Input().dev_input_fn(234, col_index)().make_initializable_iterator().get_next()
-
-    print('Training...')
-    estimator.fit_generator(
-        train_gen(batch_size),
-        epochs=2,
-        steps_per_epoch=4470,
-        validation_data={x_val, y_val}
+    estimator = tf.contrib.tpu.TPUEstimator(
+        model_fn=Model().get_model,
+        use_tpu=False,
+        config=run_config,
+        train_batch_size=batch_size,
+        eval_on_tpu=False
     )
-    
+
+    input = Input()
+
+    for _ in range(10):
+        estimator.train(input_fn=input.train_input_fn(batch_size, col_index))
+
 if __name__ == '__main__':
     train()
