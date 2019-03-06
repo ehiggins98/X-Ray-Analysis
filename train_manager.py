@@ -1,15 +1,19 @@
 import tensorflow as tf
 from input import Input
 from model import Model
+import os
 import numpy as np
 
 def train():
     batch_size = 50
     col_index = 1
+
     model = Model().get_model()
     estimator = tf.contrib.tpu.keras_to_tpu_model(
         model=model,
-        strategy=tf.contrib.tpu.TPUDistributionStrategy(using_single_core=True)
+        strategy=tf.contrib.tpu.TPUDistributionStrategy(
+            tf.contrib.cluster_resolver.TPUClusterResolver(tpu=['ericdhiggins'], zone='us-central1-b')
+        )
     )
 
     estimator.compile(optimizer=tf.keras.optimizers.SGD(momentum=0.5, nesterov=True), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
@@ -21,8 +25,9 @@ def train():
         while True:
             yield iter.get_next()
 
-    x_val, y_val = Input().dev_input_fn(234, col_index().make_initializable_iterator().get_next()
+    x_val, y_val = Input().dev_input_fn(234, col_index)().make_initializable_iterator().get_next()
 
+    print('Training...')
     estimator.fit_generator(
         train_gen(batch_size),
         epochs=2,

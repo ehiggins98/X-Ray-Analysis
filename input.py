@@ -1,5 +1,4 @@
 import tensorflow as tf
-import cv2 as cv
 import numpy as np
 import math
 
@@ -20,7 +19,7 @@ class Input:
         return list(map(lambda p: math.floor(float(p[5+index])) if len(p[5+index].strip()) > 0 else -1, labels))
 
     def process_image(self, features, label):
-        image = tf.image.decode_jpeg(tf.read_file('/home/eric/Downloads/' + features[0]), channels=3)
+        image = tf.image.decode_jpeg(tf.read_file('/home/ericdhiggins/' + features[0]), channels=3)
         image = tf.image.resize_image_with_crop_or_pad(image, 400, 400)
         return image, label
 
@@ -35,10 +34,10 @@ class Input:
 
     def train_input_fn(self, batch_size, col_index):
         def input():
-            return self.get_dataset('/home/eric/Downloads/CheXpert-v1.0-small/train.csv', batch_size, col_index)
+            return self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/train.csv', batch_size, col_index)
         return input
     
     def dev_input_fn(self, batch_size, col_index):
         def input():
-            return self.get_dataset('/home/eric/Downloads/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+            return self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
         return input
