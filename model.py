@@ -1,37 +1,22 @@
 import tensorflow as tf
 
 class Model:
-    def __init__(self):
-        self.accuracy = None
-
     def get_model(self):
-        model = tf.keras.models.Sequential()
-        model.add(
-            tf.keras.layers.Conv2D(
-                filters=64,
-                input_shape=(400, 400, 1),
-                kernel_size=5,
-                padding="same",
-                data_format="channels_last",
-                activation=tf.nn.relu,
-                use_bias=True
-            )
+        initial_model = tf.keras.applications.NASNetLarge(
+            input_shape=(331, 331, 3),
+            include_top=False,
         )
 
-        model.add(
-            tf.keras.layers.Reshape(
-                (400*400*64,)
-            )
-        )
+        for l in initial_model.layers:
+            l.trainable = True
 
-        model.add(
-            tf.keras.layers.Dense(
-                units=1,
-                activation=tf.math.sigmoid,
-                use_bias=True
-            )
-        )
+        input = tf.keras.layers.Input(shape=(400, 400, 3))
+        x = tf.keras.layers.Lambda(lambda img: tf.image.resize_bicubic(img, size=(331, 331)))(input)
+        x = initial_model(x)
+        x = tf.keras.layers.Flatten(data_format='channels_last')(x)
+        x = tf.keras.layers.Dense(units=1, activation=tf.keras.activations.sigmoid)(x)
 
-        model.compile(optimizer='adam', loss=tf.keras.losses.BinaryCrossentropy(), metric='BinaryAccuracy')
+        model = tf.keras.models.Model(inputs=input, outputs=x)
+        model.compile(optimizer='adam', loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
 
-        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='models/model1')
+        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='models/nasnet')

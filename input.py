@@ -19,9 +19,8 @@ class Input:
         return list(map(lambda p: math.floor(float(p[5+index])) if len(p[5+index].strip()) > 0 else -1, labels))
 
     def process_image(self, features, label):
-        image = tf.image.decode_jpeg(tf.read_file('/home/eric/Downloads/' + features[0]), channels=1)
+        image = tf.image.decode_jpeg(tf.read_file('/home/eric/Downloads/' + features[0]), channels=3)
         image = tf.image.resize_image_with_crop_or_pad(image, 400, 400)
-        image = tf.math.divide(tf.cast(image, tf.float32), 255.0)
         return image, label
 
     def get_dataset(self, path, batch_size, col_index):
