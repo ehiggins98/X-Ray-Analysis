@@ -8,27 +8,30 @@ def train():
     batch_size = 56
     col_index = 1
 
-    run_config = tf.contrib.tpu.RunConfig(
-        cluster=tf.contrib.cluster_resolver.TPUClusterResolver(tpu='ericdhiggins', zone='us-central1-b'),
-        model_dir='models/nasnet',
-        session_config=tf.ConfigProto(
-            allow_soft_placement=True, log_device_placement=True
-        ),
-        tpu_config=tf.contrib.tpu.TPUConfig()
+    tpu_address = os.environ['COLAB_TPU_ADDR']
+    
+    def input_generator():
+      input = Input().train_input_fn(batch_size, col_index)
+      iter = input.make_initializable_iterator()
+      while True:
+        yield iter.get_next()
+    
+    print('Building model...')
+    
+    tpu_model = tf.contrib.tpu.keras_to_tpu_model(
+      Model(batch_size).get_model(),
+      strategy=tf.contrib.tpu.TPUDistributionStrategy(
+          tf.contrib.cluster_resolver.TPUClusterResolver(tpu_address)))
+    
+    print('Training...')
+    tpu_model.fit_generator(
+      input_generator(),
+      steps_per_epoch=4400,
+      epochs=10,
     )
+if __name__ == '__main__':
+    train()
 
-    estimator = tf.contrib.tpu.TPUEstimator(
-        model_fn=Model(batch_size).get_model,
-        use_tpu=True,
-        config=run_config,
-        train_batch_size=batch_size,
-        eval_on_tpu=True
-    )
-
-    input = Input()
-
-    for _ in range(10):
-        estimator.train(input_fn=input.train_input_fn(batch_size, col_index), steps=100)
 
 if __name__ == '__main__':
     train()
