@@ -5,6 +5,7 @@ import numpy as np
 
 def train():
     batch_size = 50
+    col_index = 1
     model = Model().get_model()
     estimator = tf.contrib.tpu.keras_to_tpu_model(
         model=model,
@@ -14,13 +15,13 @@ def train():
     estimator.compile(optimizer=tf.keras.optimizers.SGD(momentum=0.5, nesterov=True), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
 
     def train_gen(batch_size):
-        dataset = Input().train_input_fn(batch_size, 0)()
+        dataset = Input().train_input_fn(batch_size, col_index)()
         iter = dataset.make_initializable_iterator()
 
         while True:
             yield iter.get_next()
 
-    x_val, y_val = Input().dev_input_fn(234, 0)().make_initializable_iterator().get_next()
+    x_val, y_val = Input().dev_input_fn(234, col_index().make_initializable_iterator().get_next()
 
     estimator.fit_generator(
         train_gen(batch_size),

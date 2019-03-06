@@ -7,6 +7,7 @@ class Input:
     def load_data(self, index, path):
         data = open(path).readlines()
         data = list(map(lambda x: x.split(','), data))[1:]
+        data = list(filter(lambda x: x[3] == 'Frontal', data))
         image_names = list(map(lambda x: [x[0]], data))
 
         labels = self.get_labels(data, index)
