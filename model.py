@@ -16,7 +16,4 @@ class Model:
         x = tf.keras.layers.Flatten(data_format='channels_last')(x)
         x = tf.keras.layers.Dense(units=1, activation=tf.keras.activations.sigmoid)(x)
 
-        model = tf.keras.models.Model(inputs=input, outputs=x)
-        model.compile(optimizer='adam', loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
-
-        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='models/nasnet')
+        return tf.keras.models.Model(inputs=input, outputs=x)
