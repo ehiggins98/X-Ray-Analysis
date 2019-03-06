@@ -33,11 +33,31 @@ class Input:
         return dataset
 
     def train_input_fn(self, batch_size, col_index):
+        dataset = self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/train.csv', batch_size, col_index)
+        iterator = dataset.make_initializable_iterator()
+
         def input(params):
-            return self.get_dataset('/home/eric/CheXpert-v1.0-small/train.csv', batch_size, col_index)
+            batch_x, batch_y = iterator.get_next()
+            batch_x.set_shape([batch_size, 400, 400, 3])
+            batch_y.set_shape([batch_size, 1])
+
+            batch_x = tf.cast(batch_x, tf.float32)
+            batch_y = tf.cast(batch_y, tf.float32)
+
+            return batch_x, batch_y
         return input
     
     def dev_input_fn(self, batch_size, col_index):
+        dataset = self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+        iterator = dataset.make_initializable_iterator()
+
         def input(params):
-            return self.get_dataset('/home/eric/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+            batch_x, batch_y = iterator.get_next()
+            batch_x.set_shape([batch_size, 400, 400, 3])
+            batch_y.set_shape([batch_size, 1])
+
+            batch_x = tf.cast(batch_x, tf.float32)
+            batch_y = tf.cast(batch_y, tf.float32)
+
+            return batch_x, batch_y
         return input
