@@ -15,7 +15,7 @@ def train():
         batch_x, batch_y = iter.get_next()
         batch_x.set_shape((batch_size, 400, 400, 3))
         batch_y.set_shape((batch_size, 1))
-        return batch_x, batch_y
+        yield batch_x, batch_y
     
     print('Building model...')
     
@@ -27,7 +27,7 @@ def train():
     print('Training...')
     tpu_model.fit_generator(
       input_generator(),
-      steps_per_epoch=4400,
+      steps_per_epoch=10,
     )
 if __name__ == '__main__':
     train()
