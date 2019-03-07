@@ -33,11 +33,11 @@ class Input:
         return dataset
 
     def train_input_fn(self, batch_size, col_index):
-        def input(params):
-            return self.get_dataset('/home/eric/CheXpert-v1.0-small/train.csv', batch_size, col_index)
+        def input():
+            return self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/train.csv', batch_size, col_index)
         return input
     
     def dev_input_fn(self, batch_size, col_index):
-        def input(params):
-            return self.get_dataset('/home/eric/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+        def input():
+            return self.get_dataset('/home/ericdhiggins/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
         return input
