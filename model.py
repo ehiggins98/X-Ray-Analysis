@@ -1,6 +1,9 @@
 import tensorflow as tf
 
 class Model:
+    def __init__(self, batch_size):
+        self.__batch_size = batch_size
+
     def get_model(self):
         initial_model = tf.keras.applications.NASNetLarge(
             input_shape=(331, 331, 3),
@@ -10,7 +13,7 @@ class Model:
         for l in initial_model.layers:
             l.trainable = True
 
-        input = tf.keras.layers.Input(shape=(400, 400, 3))
+        input = tf.keras.layers.Input(shape=(400, 400, 3), batch_size=self.__batch_size)
         x = tf.keras.layers.Lambda(lambda img: tf.image.resize_bicubic(img, size=(331, 331)))(input)
         x = initial_model(x)
         x = tf.keras.layers.Flatten(data_format='channels_last')(x)

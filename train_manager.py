@@ -12,7 +12,10 @@ def train():
       input = Input().train_input_fn(batch_size, col_index)()
       iter = input.make_initializable_iterator()
       while True:
-        yield iter.get_next()
+        batch_x, batch_y = iter.get_next()
+        batch_x.set_shape((batch_size, 400, 400, 3))
+        batch_y.set_shape((batch_size, 1))
+        return batch_x, batch_y
     
     print('Building model...')
     
