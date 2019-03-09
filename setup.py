@@ -3,7 +3,8 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = ['Keras==2.2.4',
                      'h5py==2.9.0',
-                     'tensorflow==1.13.1']
+                     'tensorflow==1.13.1',
+                     'google-cloud-storage==1.14.0']
 
 setup(
     name='trainer',

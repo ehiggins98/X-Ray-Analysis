@@ -17,10 +17,10 @@ def train_and_evaluate():
     print('Training...')
     estimator.train(
         input_fn=input.train_input_fn(batch_size, col_index),
-        steps=1
+        steps=100
     )
 
-    estimator.evaluate(input_fn=input.eval_input_fn(batch_size, col_index), steps=1)
+    estimator.evaluate(input_fn=input.dev_input_fn(batch_size, col_index), steps=4)
 
 def copy_file_to_gcs(job_dir, file_path):
     with file_io.FileIO(file_path, mode='rb') as input_f:

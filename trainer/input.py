@@ -1,12 +1,20 @@
 import tensorflow as tf
 import numpy as np
 import math
+from google.cloud import storage
+
+basepath = "gs://ericdhiggins"
 
 class Input:
+    def __init__(self):
+        client = storage.Client()
+        self.__bucket = client.get_bucket('ericdhiggins')
+
     def load_data(self, index, path):
-        data = open(path).readlines()
+        data = self.__bucket.get_blob(path).download_as_string()
+        data = data.decode().split('\n')
         data = list(map(lambda x: x.split(','), data))[1:]
-        data = list(filter(lambda x: x[3] == 'Frontal', data))
+        data = list(filter(lambda x: len(x) == 19 and x[3] == 'Frontal', data))
         image_names = list(map(lambda x: [x[0]], data))
 
         labels = self.get_labels(data, index)
@@ -19,7 +27,8 @@ class Input:
         return list(map(lambda p: math.floor(float(p[5+index])) if len(p[5+index].strip()) > 0 else -1, labels))
 
     def process_image(self, features, label):
-        image = tf.image.decode_jpeg(tf.read_file('/home/ericdhiggins/' + features[0]), channels=3)
+        file = tf.read_file(tf.strings.join([basepath, features[0]], separator='/'))
+        image = tf.image.decode_jpeg(file, channels=3)
         image = tf.image.resize_image_with_crop_or_pad(image, 400, 400)
         return image, label
 
@@ -34,10 +43,10 @@ class Input:
 
     def train_input_fn(self, batch_size, col_index):
         def input():
-            return self.get_dataset('gs://ericdhiggins/CheXpert-v1.0-small/train.csv', batch_size, col_index)
+            return self.get_dataset('data/train.csv', batch_size, col_index)
         return input
     
     def dev_input_fn(self, batch_size, col_index):
         def input():
-            return self.get_dataset('gs://ericdhiggins/CheXpert-v1.0-small/valid.csv', batch_size, col_index)
+            return self.get_dataset('data/valid.csv', batch_size, col_index)
         return input
