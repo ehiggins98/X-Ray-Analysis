@@ -6,7 +6,7 @@ checkpoint_path = 'models/inceptionv3'
 job_dir = 'gs://ericdhiggins/models/inceptionv3'
 
 batch_size = 56
-col_index = 1
+col_index = 10
 
 def train_and_evaluate():
     print('Building model...')

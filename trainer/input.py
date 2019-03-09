@@ -14,7 +14,7 @@ class Input:
         data = self.__bucket.get_blob(path).download_as_string()
         data = data.decode().split('\n')
         data = list(map(lambda x: x.split(','), data))[1:]
-        data = list(filter(lambda x: len(x) == 19 and x[3] == 'Frontal', data))
+        data = list(filter(lambda x: x[3] == 'Frontal' and x[index] in ['1.0', '0.0'], data))
         image_names = list(map(lambda x: [x[0]], data))
 
         labels = self.get_labels(data, index)
