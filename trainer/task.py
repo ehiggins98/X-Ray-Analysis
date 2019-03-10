@@ -5,7 +5,7 @@ from .input import Input
 checkpoint_path = 'models/inceptionv3'
 job_dir = 'gs://ericdhiggins/models/inceptionv3'
 
-batch_size = 56
+batch_size = 20
 col_index = 10
 
 def train_and_evaluate():
@@ -17,10 +17,10 @@ def train_and_evaluate():
     print('Training...')
     estimator.train(
         input_fn=input.train_input_fn(batch_size, col_index),
-        steps=100
+        steps=50
     )
 
-    estimator.evaluate(input_fn=input.dev_input_fn(batch_size, col_index), steps=4)
+    estimator.evaluate(input_fn=input.dev_input_fn(batch_size, col_index), steps=int(250/batch_size))
 
 def copy_file_to_gcs(job_dir, file_path):
     with file_io.FileIO(file_path, mode='rb') as input_f:
