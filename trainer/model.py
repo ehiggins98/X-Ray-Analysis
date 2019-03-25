@@ -3,8 +3,8 @@ from keras import backend as K
 
 class Model:
     def get_model(self):
-        initial_model = tf.keras.applications.NASNetLarge(
-            input_shape=(331, 331, 3),
+        initial_model = tf.keras.applications.DenseNet121(
+            input_shape=(400, 400, 3),
             include_top=False,
         )
 
@@ -12,12 +12,11 @@ class Model:
             l.trainable = True
 
         input = tf.keras.layers.Input(shape=(400, 400, 3))
-        x = tf.keras.layers.Lambda(lambda img: tf.image.resize_bicubic(img, size=(331, 331)))(input)
-        x = initial_model(x)
+        x = initial_model(input)
         x = tf.keras.layers.Flatten(data_format='channels_last')(x)
         x = tf.keras.layers.Dense(units=1, activation=tf.keras.activations.sigmoid)(x)
 
         model = tf.keras.models.Model(inputs=input, outputs=x)
-        model.compile(optimizer=tf.keras.optimizers.SGD(momentum=0.5, nesterov=True), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
+        model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
 
-        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='models/nasnet')
+        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='gs://ericdhiggins/job17')

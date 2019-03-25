@@ -1,26 +1,27 @@
 import os
 from .model import Model
 from .input import Input
+import tensorflow as tf
 
-checkpoint_path = 'models/inceptionv3'
-job_dir = 'gs://ericdhiggins/models/inceptionv3'
-
-batch_size = 20
+batch_size = 16
 col_index = 10
+eval_after_steps = 200
 
 def train_and_evaluate():
+    tf.logging.set_verbosity(tf.logging.DEBUG)
     print('Building model...')
 
     estimator = Model().get_model()
     input = Input()
 
     print('Training...')
-    estimator.train(
-        input_fn=input.train_input_fn(batch_size, col_index),
-        steps=50
-    )
+    for _ in range(1):
+        estimator.train(
+            input_fn=input.train_input_fn(batch_size, col_index),
+            steps=eval_after_steps
+        )
 
-    estimator.evaluate(input_fn=input.dev_input_fn(batch_size, col_index), steps=int(250/batch_size))
+        estimator.evaluate(input_fn=input.dev_input_fn(batch_size, col_index), steps=int(250/batch_size))
 
 def copy_file_to_gcs(job_dir, file_path):
     with file_io.FileIO(file_path, mode='rb') as input_f:
