@@ -9,7 +9,7 @@ class Model:
         )
 
         for l in initial_model.layers:
-            l.trainable = True
+            l.trainable = False
 
         input = tf.keras.layers.Input(shape=(400, 400, 3))
         x = initial_model(input)
@@ -19,4 +19,4 @@ class Model:
         model = tf.keras.models.Model(inputs=input, outputs=x)
         model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.BinaryAccuracy()])
 
-        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='gs://ericdhiggins/job17')
+        return tf.keras.estimator.model_to_estimator(keras_model=model, model_dir='models/densenet121')
